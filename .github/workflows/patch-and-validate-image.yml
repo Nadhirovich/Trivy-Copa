@@ -55,7 +55,7 @@ jobs:
 
       # Step 4: Patch the Image with Copacetic
       - name: Patch Image
-        uses: project-copacetic/copa-action@v0.6.0
+        uses: project-copacetic/copa-action@main
         with:
           image: nginx:1.21.6
           image-report: 'report.json'
