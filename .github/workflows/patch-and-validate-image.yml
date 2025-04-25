@@ -59,7 +59,7 @@ jobs:
         with:
           image: nginx:1.21.6
           image-report: 'report.json'
-          patched-tag: nginx:patched
+          patched-tag: 'patched'
 
       # Save the patched image as an artifact for the next job
       - name: Save Patched Image
