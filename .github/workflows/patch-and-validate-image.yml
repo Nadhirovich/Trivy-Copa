@@ -15,12 +15,18 @@ jobs:
         run: |
           docker pull nginx:1.21.6
 
-      # Step 2: Output Number of Vulnerabilities with Trivy + grep
+      # Step 2: Install Trivy
+      - name: Install Trivy
+        run: |
+          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.40.0_Linux-64bit.tar.gz | tar -xz
+          sudo mv trivy /usr/local/bin/
+
+      # Step 3: Output Number of Vulnerabilities with Trivy + grep
       - name: Count Vulnerabilities
         run: |
           trivy image --vul-type os --ignore-unfixed nginx:1.21.6 | grep "Total"
 
-      # Step 3: Generate Trivy Report
+      # Step 4: Generate Trivy Report
       - name: Generate Trivy Report
         uses: aquasecurity/trivy-action@master
         with:
@@ -35,7 +41,6 @@ jobs:
         with:
           name: vulnerability-report
           path: report.json
-
   # Job 2: Patch the Image
   patch-image:
     runs-on: ubuntu-latest
@@ -43,7 +48,7 @@ jobs:
     steps:
       # Download the artifact from the previous job
       - name: Download Vulnerability Report
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: vulnerability-report
 
@@ -72,7 +77,7 @@ jobs:
     steps:
       # Step 1: Download the patched image
       - name: Download Patched Image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: patched-image
 
