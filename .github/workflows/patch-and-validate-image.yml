@@ -18,8 +18,9 @@ jobs:
       # Step 2: Install Trivy
       - name: Install Trivy
         run: |
-          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.40.0_Linux-64bit.tar.gz | tar -xz
-          sudo mv trivy /usr/local/bin/
+          sudo apt-get update && sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.40.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.40.0_Linux-64bit.deb
 
       # Step 3: Output Number of Vulnerabilities with Trivy + grep
       - name: Count Vulnerabilities
