@@ -25,7 +25,7 @@ jobs:
       # Step 3: Output Number of Vulnerabilities with Trivy + grep
       - name: Count Vulnerabilities
         run: |
-          trivy image --vul-type os --ignore-unfixed nginx:1.21.6 | grep "Total"
+          trivy image --vuln-type os --ignore-unfixed nginx:1.21.6 | grep "Total"
 
       # Step 4: Generate Trivy Report
       - name: Generate Trivy Report
