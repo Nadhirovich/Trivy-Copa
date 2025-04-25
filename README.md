@@ -46,7 +46,7 @@ The workflow consists of **three sequential jobs**:
   1. Download the `vulnerability-report` artifact from Job 1.
   2. Use **Copacetic** to patch the image (`nginx:1.21.6`) based on the vulnerability report:
      ```yaml
-     uses: project-copacetic/copa-action@v1.0.0
+     uses: project-copacetic/copa-action@main
      with:
        image: nginx:1.21.6
        image-report: 'report.json'
