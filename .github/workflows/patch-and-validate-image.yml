@@ -1,0 +1,126 @@
+name: Patch, Validate, and Use Local Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Job 1: Scan Vulnerabilities
+  scan-vulnerabilities:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Pull the unpatched image
+      - name: Pull Unpatched Image
+        run: |
+          docker pull nginx:1.21.6
+
+      # Step 2: Output Number of Vulnerabilities with Trivy + grep
+      - name: Count Vulnerabilities
+        run: |
+          trivy image --vul-type os --ignore-unfixed nginx:1.21.6 | grep "Total"
+
+      # Step 3: Generate Trivy Report
+      - name: Generate Trivy Report
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          format: 'json'
+          output: 'report.json'
+          image-ref: nginx:1.21.6
+
+      # Save the report.json as an artifact for the next job
+      - name: Upload Vulnerability Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: vulnerability-report
+          path: report.json
+
+  # Job 2: Patch the Image
+  patch-image:
+    runs-on: ubuntu-latest
+    needs: scan-vulnerabilities
+    steps:
+      # Download the artifact from the previous job
+      - name: Download Vulnerability Report
+        uses: actions/download-artifact@v3
+        with:
+          name: vulnerability-report
+
+      # Step 4: Patch the Image with Copacetic
+      - name: Patch Image
+        uses: project-copacetic/copa-action@v1.0.0
+        with:
+          image: nginx:1.21.6
+          image-report: 'report.json'
+          patched-tag: nginx:patched
+
+      # Save the patched image as an artifact for the next job
+      - name: Save Patched Image
+        run: |
+          docker save nginx:patched -o patched-image.tar
+      - name: Upload Patched Image
+        uses: actions/upload-artifact@v3
+        with:
+          name: patched-image
+          path: patched-image.tar
+
+  # Job 3: Test and Validate the Patched Image
+  test-patched-image:
+    runs-on: ubuntu-latest
+    needs: patch-image
+    steps:
+      # Step 1: Download the patched image
+      - name: Download Patched Image
+        uses: actions/download-artifact@v3
+        with:
+          name: patched-image
+
+      # Step 2: Load the patched image locally
+      - name: Load Patched Image
+        run: |
+          docker load < patched-image.tar
+
+      # Step 3: Run the patched container
+      - name: Start Patched Container
+        run: |
+          docker run -d --name patched-nginx -p 8080:80 nginx:patched
+
+      # Step 4: Test the web service
+      - name: Run Tests
+        run: |
+          sleep 5 # Give the container time to initialize
+          curl -o /dev/null -s -w "%{http_code}\n" http://localhost:8080 | tee test-results.txt
+          if ! grep -q "200" test-results.txt; then
+            echo "Test failed: HTTP response code is not 200" && exit 1
+          else
+            echo "Test passed: Service is reachable and returned HTTP 200"
+          fi
+
+      # Step 5: Capture logs (Optional)
+      - name: Capture Logs
+        run: |
+          docker logs patched-nginx > container-logs.txt
+          echo "Container logs captured for debugging."
+
+      # Step 6: Upload test results and logs as artifacts
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            test-results.txt
+            container-logs.txt
+
+      # Step 7: Clean up the container
+      - name: Clean Up
+        run: |
+          docker stop patched-nginx
+          docker rm patched-nginx
+
+      # Final Step: Upload Patched Image Artifact for Future Use
+      - name: Upload Patched Image for Download
+        uses: actions/upload-artifact@v3
+        with:
+          name: patched-image-final
+          path: patched-image.tar
