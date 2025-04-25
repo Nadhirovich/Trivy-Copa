@@ -3,7 +3,7 @@ name: Patch, Validate, and Use Local Image
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   # Job 1: Scan Vulnerabilities
