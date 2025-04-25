@@ -31,7 +31,7 @@ jobs:
 
       # Save the report.json as an artifact for the next job
       - name: Upload Vulnerability Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: vulnerability-report
           path: report.json
@@ -60,7 +60,7 @@ jobs:
         run: |
           docker save nginx:patched -o patched-image.tar
       - name: Upload Patched Image
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: patched-image
           path: patched-image.tar
@@ -105,7 +105,7 @@ jobs:
 
       # Step 6: Upload test results and logs as artifacts
       - name: Upload Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |
@@ -120,7 +120,7 @@ jobs:
 
       # Final Step: Upload Patched Image Artifact for Future Use
       - name: Upload Patched Image for Download
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: patched-image-final
           path: patched-image.tar
